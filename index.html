@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chatbot Hotline Miami - Assistente de Jogo</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Courier New', monospace;
+      }
+
+      body {
+        background: linear-gradient(135deg, #0c0c0c, #2a0a0a);
+        color: #e0e0e0;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+      }
+
+      .container {
+        width: 100%;
+        max-width: 900px;
+        background-color: #1a1a1a;
+        border-radius: 5px;
+        box-shadow: 0 0 20px rgba(255, 0, 0, 0.3);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        height: 85vh;
+        border: 1px solid #ff3333;
+      }
+
+      .header {
+        background: linear-gradient(to right, #0c0c0c, #2a0a0a);
+        color: #ff3333;
+        padding: 20px;
+        text-align: center;
+        position: relative;
+        border-bottom: 1px solid #ff3333;
+      }
+
+      .header h1 {
+        font-size: 1.8rem;
+        margin-bottom: 5px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        text-shadow: 0 0 10px rgba(255, 0, 0, 0.7);
+      }
+
+      .header p {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        color: #e0e0e0;
+      }
+
+      .hotline-logo {
+        position: absolute;
+        top: 15px;
+        right: 20px;
+        font-size: 2rem;
+        color: #ff3333;
+        text-shadow: 0 0 10px rgba(255, 0, 0, 0.7);
+      }
+
+      .chat-container {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+
+      .api-key-section {
+        padding: 20px;
+        background-color: #0c0c0c;
+        border-bottom: 1px solid #333;
+      }
+
+      .api-key-form {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .api-key-input {
+        flex: 1;
+        min-width: 200px;
+        padding: 12px 15px;
+        border: 1px solid #333;
+        border-radius: 0;
+        font-size: 1rem;
+        transition: all 0.3s;
+        background-color: #1a1a1a;
+        color: #e0e0e0;
+      }
+
+      .api-key-input:focus {
+        outline: none;
+        border-color: #ff3333;
+        box-shadow: 0 0 0 2px rgba(255, 51, 51, 0.3);
+      }
+
+      .api-selector {
+        width: 100%;
+        margin-bottom: 10px;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .api-selector label {
+        color: #ff3333;
+        font-weight: bold;
+      }
+
+      .api-selector select {
+        padding: 8px 12px;
+        border-radius: 0;
+        border: 1px solid #333;
+        background-color: #1a1a1a;
+        color: #e0e0e0;
+      }
+
+      .btn {
+        padding: 12px 20px;
+        background: linear-gradient(to right, #2a0a0a, #4a0a0a);
+        color: #ff3333;
+        border: 1px solid #ff3333;
+        border-radius: 0;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .btn:hover {
+        background: linear-gradient(to right, #4a0a0a, #6a0a0a);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(255, 0, 0, 0.2);
+      }
+
+      .btn:active {
+        transform: translateY(0);
+      }
+
+      .chat-box {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        background-color: #0c0c0c;
+      }
+
+      .message {
+        max-width: 80%;
+        padding: 12px 18px;
+        border-radius: 0;
+        line-height: 1.5;
+        position: relative;
+        animation: fadeIn 0.3s ease-out;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .user-message {
+        align-self: flex-end;
+        background: linear-gradient(to right, #4a0a0a, #2a0a0a);
+        color: #ff3333;
+        border: 1px solid #ff3333;
+      }
+
+      .bot-message {
+        align-self: flex-start;
+        background-color: #1a1a1a;
+        color: #e0e0e0;
+        border: 1px solid #333;
+      }
+
+      .warning-message {
+        align-self: center;
+        background-color: #2a1a0a;
+        color: #ff9933;
+        border: 1px solid #ff9933;
+        border-radius: 0;
+        max-width: 90%;
+        text-align: center;
+        font-size: 0.9rem;
+      }
+
+      .error-message {
+        align-self: center;
+        background-color: #2a0a0a;
+        color: #ff3333;
+        border: 1px solid #ff3333;
+        border-radius: 0;
+        max-width: 90%;
+        text-align: center;
+        font-size: 0.9rem;
+      }
+
+      .input-section {
+        padding: 20px;
+        background-color: #0c0c0c;
+        border-top: 1px solid #333;
+        display: flex;
+        gap: 10px;
+        height: auto;
+        float: left;
+      }
+
+      .message-input {
+        flex: 1;
+        padding: 12px 15px;
+        border: 1px solid #333;
+        border-radius: 0;
+        font-size: 1rem;
+        transition: all 0.3s;
+        background-color: #1a1a1a;
+        color: #e0e0e0;
+      }
+
+      .message-input:focus {
+        outline: none;
+        border-color: #ff3333;
+        box-shadow: 0 0 0 2px rgba(255, 51, 51, 0.3);
+      }
+
+      .send-btn {
+        padding: 12px 20px;
+        background: linear-gradient(to right, #2a0a0a, #4a0a0a);
+        color: #ff3333;
+        border: 1px solid #ff3333;
+        border-radius: 0;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .send-btn:hover {
+        background: linear-gradient(to right, #4a0a0a, #6a0a0a);
+        transform: translateY(-2px);
+      }
+
+      .send-btn:active {
+        transform: translateY(0);
+      }
+
+      .send-btn:disabled {
+        background: #333;
+        color: #666;
+        border-color: #666;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .typing-indicator {
+        display: inline-block;
+        padding: 12px 18px;
+        background-color: #1a1a1a;
+        border: 1px solid #333;
+        border-radius: 0;
+        align-self: flex-start;
+      }
+
+      .typing-dots {
+        display: flex;
+        gap: 4px;
+      }
+
+      .typing-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: #ff3333;
+        animation: typing 1.4s infinite ease-in-out;
+      }
+
+      .typing-dot:nth-child(1) {
+        animation-delay: -0.32s;
+      }
+      .typing-dot:nth-child(2) {
+        animation-delay: -0.16s;
+      }
+
+      @keyframes typing {
+        0%,
+        80%,
+        100% {
+          transform: scale(0.8);
+          opacity: 0.5;
+        }
+        40% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+
+      .info-section {
+        padding: 15px 20px;
+        background-color: #0c0c0c;
+        border-top: 1px solid #333;
+        font-size: 0.85rem;
+        color: #ff3333;
+        text-align: center;
+      }
+
+      .info-section a {
+        color: #ff6666;
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      .info-section a:hover {
+        text-decoration: underline;
+        color: #ff9999;
+      }
+
+      .code-block {
+        background-color: #0c0c0c;
+        border: 1px solid #333;
+        border-radius: 0;
+        padding: 10px;
+        margin: 10px 0;
+        font-family: "Courier New", monospace;
+        font-size: 0.9rem;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        color: #ff9933;
+      }
+
+      .api-info {
+        margin-top: 10px;
+        font-size: 0.8rem;
+        color: #999;
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          height: 95vh;
+        }
+
+        .message {
+          max-width: 90%;
+        }
+
+        .header h1 {
+          font-size: 1.5rem;
+        }
+
+        .hotline-logo {
+          font-size: 1.5rem;
+          top: 18px;
+        }
+
+        .api-key-form {
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Chatbot Hotline Miami - Assistente de Jogo</h1>
+        <p>Obtenha ajuda com estratégias, dicas e informações sobre Hotline Miami</p>
+        <div class="hotline-logo">☎</div>
+      </div>
+
+      <div class="chat-container">
+        <div class="api-key-section">
+          <div class="api-selector">
+            <label for="apiProvider">Selecione a API:</label>
+            <select id="apiProvider">
+              <option value="gemini">
+                Google Gemini (Recomendado - Gratuito)
+              </option>
+              <option value="deepseek">
+                DeepSeek (Pode Requerer Pagamento)
+              </option>
+            </select>
+          </div>
+          <div class="api-key-form">
+            <input
+              type="password"
+              class="api-key-input"
+              placeholder="AIzaSyBcMzghdFug_KQmsXzoEhV4-NG9pDuemFI"
+              id="apiKey"
+            />
+            <button class="btn" id="saveApiKey">Salvar Chave</button>
+          </div>
+          <div class="api-info" id="apiInfo">
+            Para Google Gemini: Obtenha uma chave gratuita em
+            <a href="https://aistudio.google.com/app/apikey" target="_blank"
+              >Google AI Studio</a
+            >
+          </div>
+        </div>
+
+        <div class="chat-box" id="chatBox">
+          <div class="message bot-message">
+            Olá! Sou seu assistente especializado em Hotline Miami. Por favor, selecione uma API e
+            insira sua chave para começarmos. Posso ajudar com estratégias, dicas de combate, informações sobre níveis, máscaras, armas e muito mais sobre o jogo Hotline Miami.
+          </div>
+        </div>
+
+        <div class="input-section">
+          <input
+            type="text"
+            class="message-input"
+            placeholder="Digite sua pergunta sobre Hotline Miami..."
+            id="messageInput"
+            disabled
+          />
+          <button class="send-btn" id="sendMessage" disabled>
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M22 2L11 13"
+                stroke="#ff3333"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M22 2L15 22L11 13L2 9L22 2Z"
+                stroke="#ff3333"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <div class="info-section">
+          <strong>Google Gemini:</strong> Obtenha uma chave gratuita em
+          <a href="https://aistudio.google.com/app/apikey" target="_blank"
+            >Google AI Studio</a
+          >
+          | <strong>DeepSeek:</strong>
+          <a href="https://platform.deepseek.com/api_keys" target="_blank"
+            >DeepSeek Platform</a
+          >
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const apiProviderSelect = document.getElementById("apiProvider");
+        const apiKeyInput = document.getElementById("apiKey");
+        const apiInfo = document.getElementById("apiInfo");
+        const saveApiKeyBtn = document.getElementById("saveApiKey");
+        const messageInput = document.getElementById("messageInput");
+        const sendMessageBtn = document.getElementById("sendMessage");
+        const chatBox = document.getElementById("chatBox");
+
+        let apiKey = "";
+        let apiProvider = "gemini";
+        let isProcessing = false;
+
+        // Atualizar informações da API quando o provedor mudar
+        apiProviderSelect.addEventListener("change", function () {
+          apiProvider = this.value;
+          updateApiInfo();
+        });
+
+        function updateApiInfo() {
+          if (apiProvider === "gemini") {
+            apiInfo.innerHTML =
+              'Para Google Gemini: Obtenha uma chave gratuita em <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a>';
+            apiKeyInput.placeholder = "Digite sua chave do Google Gemini...";
+          } else {
+            apiInfo.innerHTML =
+              'Para DeepSeek: Obtenha uma chave em <a href="https://platform.deepseek.com/api_keys" target="_blank">DeepSeek Platform</a> (pode requerer pagamento)';
+            apiKeyInput.placeholder = "Digite sua chave do DeepSeek...";
+          }
+        }
+
+        // Inicializar informações da API
+        updateApiInfo();
+
+        // Salvar a chave da API
+        saveApiKeyBtn.addEventListener("click", function () {
+          apiKey = apiKeyInput.value.trim();
+
+          if (!apiKey) {
+            addMessage("Por favor, digite uma chave da API válida.", "warning");
+            return;
+          }
+
+          // Esconder a chave na interface
+          apiKeyInput.type = "password";
+          apiKeyInput.value = "••••••••••••••••";
+          apiKeyInput.disabled = true;
+          saveApiKeyBtn.disabled = true;
+          apiProviderSelect.disabled = true;
+
+          // Ativar campos de mensagem
+          messageInput.disabled = false;
+          sendMessageBtn.disabled = false;
+
+          addMessage(
+            `Chave da API ${
+              apiProvider === "gemini" ? "Google Gemini" : "DeepSeek"
+            } salva com sucesso! Agora você pode fazer suas perguntas sobre Hotline Miami.`,
+            "bot"
+          );
+          messageInput.focus();
+        });
+
+        // Enviar mensagem ao clicar no botão
+        sendMessageBtn.addEventListener("click", sendMessage);
+
+        // Enviar mensagem ao pressionar Enter
+        messageInput.addEventListener("keypress", function (e) {
+          if (e.key === "Enter" && !isProcessing) {
+            sendMessage();
+          }
+        });
+
+        async function sendMessage() {
+          const message = messageInput.value.trim();
+
+          if (!message || isProcessing) return;
+
+          // Verificar se a pergunta é sobre Hotline Miami
+          if (!isHotlineMiamiRelated(message)) {
+            addMessage(
+              "Por favor, faça apenas perguntas relacionadas a Hotline Miami. Este assistente é especializado em ajudar com questões sobre o jogo Hotline Miami.",
+              "warning"
+            );
+            messageInput.value = "";
+            return;
+          }
+
+          // Adicionar mensagem do usuário ao chat
+          addMessage(message, "user");
+          messageInput.value = "";
+
+          // Mostrar indicador de digitação
+          showTypingIndicator();
+
+          // Processar a pergunta
+          await processQuestion(message);
+        }
+
+        async function processQuestion(question) {
+          isProcessing = true;
+          sendMessageBtn.disabled = true;
+
+          try {
+            let response;
+
+            if (apiProvider === "gemini") {
+              response = await callGeminiAPI(question);
+            } else {
+              response = await callDeepSeekAPI(question);
+            }
+
+            // Remover indicador de digitação
+            removeTypingIndicator();
+
+            // Exibir a resposta
+            addMessage(response, "bot");
+          } catch (error) {
+            console.error("Erro ao processar a pergunta:", error);
+            removeTypingIndicator();
+
+            let errorMessage =
+              "Desculpe, ocorreu um erro ao processar sua pergunta. ";
+
+            if (error.message.includes("402")) {
+              errorMessage +=
+                "A API selecionada requer pagamento. Por favor, use o Google Gemini que tem um plano gratuito.";
+            } else if (error.message.includes("401")) {
+              errorMessage +=
+                "Chave da API inválida ou não autorizada. Verifique sua chave e tente novamente.";
+            } else if (error.message.includes("429")) {
+              errorMessage +=
+                "Limite de requisições excedido. Tente novamente mais tarde.";
+            } else if (error.message.includes("500")) {
+              errorMessage +=
+                "Erro interno do servidor. Tente novamente em alguns instantes.";
+            } else {
+              errorMessage += `Detalhes: ${error.message}`;
+            }
+
+            addMessage(errorMessage, "error");
+          } finally {
+            isProcessing = false;
+            sendMessageBtn.disabled = false;
+          }
+        }
+
+        async function callGeminiAPI(question) {
+          // Usando a API do Google Gemini
+          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+          const response = await fetch(apiUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              contents: [
+                {
+                  parts: [
+                    {
+                      text: `Você é um assistente especializado no jogo Hotline Miami. Responda apenas perguntas relacionadas a Hotline Miami, incluindo estratégias, dicas de combate, informações sobre níveis, máscaras, armas, história, personagens, segredos e truques. Se a pergunta não for sobre Hotline Miami, explique educadamente que você só pode ajudar com questões relacionadas a este jogo.
+
+Pergunta do usuário: ${question}`,
+                    },
+                  ],
+                },
+              ],
+              generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: 1000,
+              },
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error(
+              `Erro na API: ${response.status} - ${response.statusText}`
+            );
+          }
+
+          const data = await response.json();
+
+          if (data.candidates && data.candidates.length > 0) {
+            return data.candidates[0].content.parts[0].text;
+          } else {
+            throw new Error("Resposta da API não contém dados válidos");
+          }
+        }
+
+        async function callDeepSeekAPI(question) {
+          // Tentativa com a API DeepSeek (pode retornar erro 402)
+          const response = await fetch(
+            "https://api.deepseek.com/v1/chat/completions",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${apiKey}`,
+              },
+              body: JSON.stringify({
+                model: "deepseek-chat",
+                messages: [
+                  {
+                    role: "system",
+                    content:
+                      "Você é um assistente especializado no jogo Hotline Miami. Responda apenas perguntas relacionadas a Hotline Miami, incluindo estratégias, dicas de combate, informações sobre níveis, máscaras, armas, história, personagens, segredos e truques. Se a pergunta não for sobre Hotline Miami, explique educadamente que você só pode ajudar com questões relacionadas a este jogo.",
+                  },
+                  {
+                    role: "user",
+                    content: question,
+                  },
+                ],
+                max_tokens: 1000,
+                temperature: 0.7,
+              }),
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error(
+              `Erro na API: ${response.status} - ${response.statusText}`
+            );
+          }
+
+          const data = await response.json();
+
+          if (data.choices && data.choices.length > 0) {
+            return data.choices[0].message.content;
+          } else {
+            throw new Error("Resposta da API não contém dados válidos");
+          }
+        }
+
+        function isHotlineMiamiRelated(message) {
+          const hotlineMiamiKeywords = [
+            "hotline miami",
+            "hotline",
+            "miami",
+            "jacket",
+            "máscara",
+            "mask",
+            "richard",
+            "russian mafia",
+            "50 blessings",
+            "combate",
+            "combat",
+            "arma",
+            "weapon",
+            "nível",
+            "level",
+            "capítulo",
+            "chapter",
+            "pontuação",
+            "score",
+            "combo",
+            "execução",
+            "execution",
+            "fase",
+            "stage",
+            "inimigo",
+            "enemy",
+            "chefe",
+            "boss",
+            "estrategia",
+            "strategy",
+            "dica",
+            "tip",
+            "segredo",
+            "secret",
+            "truque",
+            "trick",
+            "história",
+            "story",
+            "personagem",
+            "character",
+            "jake",
+            "biker",
+            "don juan",
+            "aubrey",
+            "russel",
+            "martin",
+            "dennis",
+            "jones",
+            "rex",
+            "corey",
+            "mark",
+            "tony",
+            "carl",
+            "rama",
+            "alex",
+            "ash",
+            "evan",
+            "manny",
+            "henchman",
+            "ratos",
+            "ratos",
+            "fan",
+            "beard",
+            "pizza",
+            "pizzeria",
+            "vhs",
+            "videocassete",
+            "devolver",
+            "dennation"
+          ];
+
+          const lowerMessage = message.toLowerCase();
+
+          // Verificar se a mensagem contém palavras-chave relacionadas a Hotline Miami
+          return hotlineMiamiKeywords.some((keyword) =>
+            lowerMessage.includes(keyword.toLowerCase())
+          );
+        }
+
+        function addMessage(text, sender) {
+          const messageDiv = document.createElement("div");
+          messageDiv.classList.add("message");
+
+          if (sender === "user") {
+            messageDiv.classList.add("user-message");
+            messageDiv.textContent = text;
+          } else if (sender === "bot") {
+            messageDiv.classList.add("bot-message");
+
+            // Processar a resposta para formatar blocos de código
+            const formattedText = formatCodeBlocks(text);
+            messageDiv.innerHTML = formattedText;
+          } else if (sender === "warning") {
+            messageDiv.classList.add("warning-message");
+            messageDiv.textContent = text;
+          } else if (sender === "error") {
+            messageDiv.classList.add("error-message");
+            messageDiv.textContent = text;
+          }
+
+          chatBox.appendChild(messageDiv);
+
+          // Rolagem automática para a última mensagem
+          chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function formatCodeBlocks(text) {
+          // Substituir blocos de código marcados com ``` por elementos pre/code
+          return text.replace(
+            /```(\w+)?\n([\s\S]*?)```/g,
+            function (match, language, code) {
+              return `<div class="code-block"><pre><code>${code.trim()}</code></pre></div>`;
+            }
+          );
+        }
+
+        function showTypingIndicator() {
+          const typingDiv = document.createElement("div");
+          typingDiv.classList.add("typing-indicator");
+          typingDiv.id = "typingIndicator";
+
+          const dotsDiv = document.createElement("div");
+          dotsDiv.classList.add("typing-dots");
+
+          for (let i = 0; i < 3; i++) {
+            const dot = document.createElement("div");
+            dot.classList.add("typing-dot");
+            dotsDiv.appendChild(dot);
+          }
+
+          typingDiv.appendChild(dotsDiv);
+          chatBox.appendChild(typingDiv);
+
+          // Rolagem automática para o indicador de digitação
+          chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+          const typingIndicator = document.getElementById("typingIndicator");
+          if (typingIndicator) {
+            typingIndicator.remove();
+          }
+        }
+      });
+    </script>
+  </body>
+</html>
